@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateSentencesTable extends Migration
 {
@@ -17,7 +17,7 @@ class CreateSentencesTable extends Migration
             $table->increments('id');
             $table->string('sentence', 100);
             $table->string('reply', 100);
-            $table->unsignedInteger('count');
+            $table->string('type', 20);
             $table->timestamps();
 
             $table->unique(['sentence', 'reply']);
