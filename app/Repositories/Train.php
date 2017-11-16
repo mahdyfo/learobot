@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Message;
 use App\Reply;
 use App\Word;
 use Illuminate\Database\QueryException;
@@ -9,6 +10,15 @@ use Illuminate\Support\Facades\DB;
 
 class Train
 {
+    public function __construct(Message $message = null)
+    {
+        if (is_null($message)) return;
+
+        $reply = $this->saveReply($message->text);
+        $word_ids = $this->saveWords($message->replied_message_text);
+        $this->attachWordsToReply($reply, $word_ids);
+    }
+
     /**
      * Extract the words from a string
      *
@@ -17,7 +27,7 @@ class Train
      */
     public function getWords($text)
     {
-        $words = explode(' ', $text);
+        $words = explode(' ', trim($text));
 
         //unique
         $words = array_unique($words);
@@ -42,7 +52,7 @@ class Train
     public function findWords($words)
     {
         $word = new Word;
-        return $word->select('id')->whereIn('word', $words)->get()->pluck('id');
+        return $word->select('id')->whereIn('word', $words)->get()->pluck('id')->toArray();
     }
 
     /**
@@ -86,5 +96,28 @@ class Train
 
         //return words ids
         return $this->findWords($words);
+    }
+
+    /**
+     * Attach relative words to a reply
+     *
+     * @param Reply $reply
+     * @param array $word_ids
+     */
+    public function attachWordsToReply(Reply $reply, $word_ids)
+    {
+        if (count($word_ids) == 0) return;
+
+        foreach ($word_ids as $word_id) {
+            if ($word_id <= 0) continue;
+            $rows[] = '(' . intval($reply->id) . ', ?)';
+        }
+
+        //insert on duplicate key update repeat = repeat+1
+        DB::insert(DB::raw(
+            'INSERT INTO reply_word(`reply_id`, `word_id`) VALUES '
+            . implode(',', $rows)
+            . ' ON DUPLICATE KEY UPDATE `repeat`=`repeat`+1'
+        ), $word_ids);
     }
 }
