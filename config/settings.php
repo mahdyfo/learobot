@@ -1,5 +1,6 @@
 <?php
 
 return [
-    'bot_id' => 'hamedkarimboanibbbbbot',
+    'bot_id' => 'khanoom_herasati_bot',
+    'min_repeat' => 1,
 ];

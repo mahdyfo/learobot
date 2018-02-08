@@ -10,4 +10,9 @@ class Word extends Model
     {
         return $this->belongsToMany('App\Reply');
     }
+
+    public function scopeMatchWord($query, $text)
+    {
+        return $query->whereRaw('MATCH word AGAINST (? IN BOOLEAN MODE)', [$text]);
+    }
 }

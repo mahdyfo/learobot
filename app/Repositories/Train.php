@@ -12,35 +12,9 @@ class Train
 {
     public function __construct(Message $message = null)
     {
-        if (is_null($message)) return;
-
         $reply = $this->saveReply($message->text);
         $word_ids = $this->saveWords($message->replied_message_text);
         $this->attachWordsToReply($reply, $word_ids);
-    }
-
-    /**
-     * Extract the words from a string
-     *
-     * @param string $text Contains words separated by space
-     * @return array Array of the Words extracted from text
-     */
-    public function getWords($text)
-    {
-        $words = explode(' ', trim($text));
-
-        //unique
-        $words = array_unique($words);
-
-        //not empty
-        $words = array_filter($words, function ($var) {
-            return !empty($var);
-        });
-
-        //trim
-        $words = array_map('trim', $words);
-
-        return $words;
     }
 
     /**
@@ -82,8 +56,9 @@ class Train
      */
     public function saveWords($text)
     {
-        //explode words
-        $words = $this->getWords($text);
+        $sentence = new Sentence;
+
+        $words = $sentence->getWords($text);
 
         //format sql insert
         $query = [];
