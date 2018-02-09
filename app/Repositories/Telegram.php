@@ -11,15 +11,20 @@ class Telegram
 
     private $telegram;
 
-    public function __construct()
+    public function __construct(Api $client)
     {
-        $this->telegram = new Api;
-        $this->update = $this->telegram->getWebhookUpdates();
+        $this->telegram = $client;
+        $this->update = $client->getWebhookUpdates();
         $this->chat_id = $this->update->getMessage()->getChat()->getId();
     }
 
-    public function sendMessage($text)
+    public function sendMessage($text, $reply = false)
     {
-        return $this->telegram->sendMessage(['chat_id' => $this->chat_id, 'text' => $text]);
+        $params = ['chat_id' => $this->chat_id, 'text' => $text];
+        if ($reply) {
+            $params['reply_to_message_id'] = $this->update->getMessage()->getMessageId();
+        }
+
+        return $this->telegram->sendMessage($params);
     }
 }

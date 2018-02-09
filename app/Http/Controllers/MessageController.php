@@ -6,20 +6,24 @@ use App\Message;
 use App\Repositories\Predict;
 use App\Repositories\Telegram;
 use App\Repositories\Train;
-use Illuminate\Http\Request;
+use Telegram\Bot\Api;
 
 class MessageController extends Controller
 {
-    public function hook(Request $request)
+    public function hook()
     {
-        $data = $request->getContent();
-        $message = new Message($data);
+        $telegram = new Api;
 
-        //skip null messages
-        if (is_null($message)) return;
+        //Instantiate Message
+        $message = new Message($telegram);
+
+        //Skip null messages
+        if (empty($message->text)) {
+            return null;
+        }
 
         //Train AI
-        if (!$message->is_reply_to_me) {
+        if ($message->is_reply) {
             new Train($message);
         }
 
@@ -32,9 +36,9 @@ class MessageController extends Controller
         }
 
         //Send Response
-        if ($reply) {
-            $telegram = new Telegram;
-            $telegram->sendMessage($reply);
+        if (!empty($reply)) {
+            $client = new Telegram($telegram);
+            $client->sendMessage($reply, 1);
         }
     }
 }

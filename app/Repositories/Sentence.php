@@ -12,18 +12,24 @@ class Sentence
      */
     public function getWords($text)
     {
+        $text = str_replace(['+', '-', '*', '%', '"', ')', '(', '<', '>', '~'], ' ', $text);
+        $text = preg_replace('/\s+/', ' ', $text);
         $words = explode(' ', trim($text));
 
-        //unique
-        $words = array_unique($words);
+        if ($words) {
+            //unique
+            $words = array_unique($words);
 
-        //not empty
-        $words = array_filter($words, function ($var) {
-            return !empty($var);
-        });
+            //not empty
+            $words = array_filter($words, function ($var) {
+                return !empty($var) && mb_strlen($var) > 2 && !preg_match('/\@/', $var);
+            });
 
-        //trim
-        $words = array_map('trim', $words);
+            //trim
+            $words = array_map('trim', $words);
+        } else {
+            $words = [trim($text)];
+        }
 
         return $words;
     }

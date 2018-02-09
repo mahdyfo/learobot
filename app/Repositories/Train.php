@@ -12,9 +12,13 @@ class Train
 {
     public function __construct(Message $message = null)
     {
-        $reply = $this->saveReply($message->text);
         $word_ids = $this->saveWords($message->replied_message_text);
-        $this->attachWordsToReply($reply, $word_ids);
+        if ($word_ids) {
+            $reply = $this->saveReply($message->text);
+            if ($reply) {
+                $this->attachWordsToReply($reply, $word_ids);
+            }
+        }
     }
 
     /**
@@ -44,7 +48,7 @@ class Train
             $reply->save();
             return $reply;
         } catch (QueryException $e) {
-            return $reply->where('reply', 'like', '%' . $text . '%')->first();
+            return $reply->where('reply', 'like', '%' . str_replace('%', '', $text) . '%')->first();
         }
     }
 
@@ -57,18 +61,20 @@ class Train
     public function saveWords($text)
     {
         $sentence = new Sentence;
-
         $words = $sentence->getWords($text);
 
-        //format sql insert
-        $query = [];
-        foreach ($words as $word) {
-            $query[] = '(?)';
+        if (!empty($words) && count($words) >= 1) {
+            //format sql insert
+            $i = 0;
+            foreach ($words as $word) {
+                $binds[':bind' . $i] = $word;
+                $params[] = '(:bind' . $i . ')';
+                $i++;
+            }
+
+            //insert unique words
+            DB::insert('INSERT IGNORE INTO words(word) VALUES ' . implode(',', $params), $binds);
         }
-
-        //insert unique words
-        DB::insert(DB::raw('INSERT IGNORE INTO words(`word`) VALUES ' . implode(',', $query)), $words);
-
         //return words ids
         return $this->findWords($words);
     }

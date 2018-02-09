@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Telegram\Bot\Api;
+use Telegram\Bot\Objects\Message as TMessage;
 
 class Message extends Model
 {
@@ -25,57 +27,60 @@ class Message extends Model
 
     /**
      * Message constructor.
-     * @param string $message
+     * @param Api $telegram
+     * @internal param string $message
      */
 
-    public function __construct($message)
+    public function __construct(Api $telegram)
     {
         parent::__construct();
 
-        //example message
-        /*$message = '{"update_id":884307756,
-"message":{"message_id":53,"from":{"id":99555687,"is_bot":false,"first_name":"MaHDyfo","username":"mahdyfo","language_code":"en"},"chat":{"id":99555687,"first_name":"MaHDyfo","username":"mahdyfo","type":"private"},"date":1510825945,"reply_to_message":{"message_id":48,"from":{"id":429251188,"is_bot":true,"first_name":"\u062d\u0627\u0645\u062f \u06a9\u0631\u06cc\u0645\u06cc","username":"hamedkarimboanibbbbbot"},"chat":{"id":99555687,"first_name":"MaHDyfo","username":"mahdyfo","type":"private"},"date":1499931029,"text":"1"},"text":"\u0627"}}';*/
+        $this->decoded_message = $telegram->getWebhookUpdates()->getMessage();
 
-        $this->decoded_message = json_decode($message)->message;
-
-        $this->parse($this->decoded_message);
+        if ($this->decoded_message) {
+            $this->parse($this->decoded_message);
+        }
     }
 
     /**
      * Message parse
      * @param $message
      */
-    private function parse($message){
+    private function parse(TMessage $message)
+    {
         //Message Type
-        $this->is_photo     = isset($message->photo);
-        $this->is_audio     = isset($message->audio);
-        $this->is_voice     = isset($message->voice);
-        $this->is_video     = isset($message->video);
-        $this->is_document  = isset($message->document);
-        $this->is_sticker   = isset($message->sticker);
-        $this->is_raw_text  = isset($message->text);
+        $this->is_photo = !empty($message->getPhoto());
+        $this->is_audio = !empty($message->getAudio());
+        $this->is_voice = !empty($message->getVoice());
+        $this->is_video = !empty($message->getVideo());
+        $this->is_document = !empty($message->getDocument());
+        $this->is_sticker = !empty($message->getSticker());
+        $this->is_raw_text = !empty($message->getText());
 
         //Message Attributes
-        $this->is_reply       = isset($message->reply_to_message);
-        $this->is_reply_to_me = $this->is_reply ? ($message->reply_to_message->from->username == config('settings.bot_id')) : false;
-        $this->chat_id        = $message->chat->id;
-        $this->message_id     = $message->message_id;
+        $this->is_reply = !empty($message->getReplyToMessage());
+        $this->is_reply_to_me = (
+        $this->is_reply ?
+            ($message->getReplyToMessage()->getFrom()->getUsername() == config('settings.bot_id')) : false
+        );
+        $this->chat_id = $message->getChat()->getId();
+        $this->message_id = $message->getMessageId();
 
         //Message Text
-        if(isset($message->text)){
-            $this->text = $message->text;
-        }elseif(isset($message->caption)){
-            $this->text = $message->caption;
-        }elseif(isset($message->sticker)){
-            $this->text = $message->sticker->emoji;
+        if (!empty($message->getText())) {
+            $this->text = $message->getText();
+        } elseif (!empty($message->getCaption())) {
+            $this->text = $message->getCaption();
+        } elseif (!empty($message->getSticker())) {
+            $this->text = $message->getSticker()->get('emoji');
         }
 
         //Reply Message Text
         if($this->is_reply) {
-            if (isset($message->reply_to_message->text)) {
-                $this->replied_message_text = $message->reply_to_message->text;
-            } elseif (isset($message->reply_to_message->caption)) {
-                $this->replied_message_text = $message->reply_to_message->caption;
+            if (!empty($message->getReplyToMessage()->getText())) {
+                $this->replied_message_text = $message->getReplyToMessage()->getText();
+            } elseif (!empty($message->getReplyToMessage()->getCaption())) {
+                $this->replied_message_text = $message->getReplyToMessage()->getCaption();
             }
         }
     }

@@ -25,13 +25,15 @@ class Predict
         $ids = $word_model->matchWord($words)->get();
 
         $result = DB::table('reply_word')
-            ->select('reply_id', 'repeat')
+            ->select('reply')
+            ->join('replies', 'replies.id', '=', 'reply_word.reply_id')
             ->whereIn('word_id', $ids)
+            ->where('repeat', '>=', $min_reply_repeat ? $min_reply_repeat : config('settings.min_repeat'))
             ->orderBy('repeat', 'desc')
             ->first();
 
-        if ($result->repeat >= ($min_reply_repeat ? $min_reply_repeat : config('settings.min_repeat'))) {
-            return $result;
+        if ($result) {
+            return $result->reply;
         }
 
         return null;
@@ -39,9 +41,7 @@ class Predict
 
     private function formatBooleanSearch($input_array)
     {
-        $text = str_replace($input_array, ['+', '-', '*', '%', '"', ')', '(', '<', '>', '~'], '');
-        $text = implode(' ', $text);
-        $text = trim($text);
+        $text = implode(' ', $input_array);
 
         return $text;
     }

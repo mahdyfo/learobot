@@ -11,4 +11,4 @@
 |
 */
 
-Route::get('/webhook', 'MessageController@hook');
+Route::post('/webhook', 'MessageController@hook');
