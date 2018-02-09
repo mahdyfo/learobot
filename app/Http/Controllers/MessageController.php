@@ -23,14 +23,14 @@ class MessageController extends Controller
         }
 
         //Train AI
-        if ($message->is_reply) {
+        if ($message->is_reply && !$message->is_reply_to_me && !$message->self_reply) {
             new Train($message);
         }
 
         //Predict
         $predict = new Predict($message);
         if ($message->is_reply_to_me) {
-            $reply = $predict->getMostRelativeReply(2);
+            $reply = $predict->getMostRelativeReply(2.5);
         } else {
             $reply = $predict->getMostRelativeReply(); //default min repeat
         }

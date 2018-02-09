@@ -24,6 +24,7 @@ class Message extends Model
     public $is_reply;
     public $replied_message_text = '';
     public $is_reply_to_me;
+    public $self_reply;
 
     /**
      * Message constructor.
@@ -63,6 +64,7 @@ class Message extends Model
         $this->is_reply ?
             ($message->getReplyToMessage()->getFrom()->getUsername() == config('settings.bot_id')) : false
         );
+        $this->self_reply = $this->is_reply ? $this->is_reply && ($message->getReplyToMessage()->getFrom()->getUsername() == $message->getFrom()->getUsername()) : false;
         $this->chat_id = $message->getChat()->getId();
         $this->message_id = $message->getMessageId();
 

@@ -48,7 +48,7 @@ class Train
             $reply->save();
             return $reply;
         } catch (QueryException $e) {
-            return $reply->where('reply', 'like', '%' . str_replace('%', '', $text) . '%')->first();
+            return $reply->where('reply', 'like', str_replace(['%', '_'], ['\%', '\_'], $text))->first();
         }
     }
 
@@ -91,14 +91,14 @@ class Train
 
         foreach ($word_ids as $word_id) {
             if ($word_id <= 0) continue;
-            $rows[] = '(' . intval($reply->id) . ', ?)';
+            $rows[] = '(?,' . intval($reply->id) . ')';
         }
 
         //insert on duplicate key update repeat = repeat+1
         DB::insert(DB::raw(
-            'INSERT INTO reply_word(`reply_id`, `word_id`) VALUES '
+            'INSERT INTO reply_word(`word_id`, `reply_id`) VALUES '
             . implode(',', $rows)
-            . ' ON DUPLICATE KEY UPDATE `repeat`=`repeat`+1'
+            . ' ON DUPLICATE KEY UPDATE `repeat`=VALUES(`repeat`)+1'
         ), $word_ids);
     }
 }

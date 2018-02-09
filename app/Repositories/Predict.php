@@ -30,14 +30,16 @@ class Predict
 
         $result = DB::table('reply_word')
             ->select(
-                'reply',
-                DB::raw('((SUM(repeat) * .7) + (COUNT(*) * .3)) as score')
+                'replies.reply',
+                DB::raw('( ( AVG(reply_word.repeat) * 0.3 ) + ( COUNT(*) * 0.7 ) ) as score')
             )
             ->join('replies', 'replies.id', '=', 'reply_word.reply_id')
             ->whereIn('word_id', $ids)
-            ->groupBy('reply_word.reply_id')
-            ->orderBy('effect', 'desc')
+            ->groupBy('replies.reply')
+            ->orderBy('score', 'desc')
             ->first();
+
+        //if($result) cache(['last_min_score' => $result->score], 5);
 
         if ($result && $result->score >= $min_score) {
             return $result->reply;

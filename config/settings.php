@@ -2,5 +2,5 @@
 
 return [
     'bot_id' => 'khanoom_herasati_bot',
-    'min_score' => 2.3,
+    'min_score' => 5,
 ];

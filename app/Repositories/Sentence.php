@@ -33,4 +33,9 @@ class Sentence
 
         return $words;
     }
+
+    public function censorWords($words_array)
+    {
+
+    }
 }
