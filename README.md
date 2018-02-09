@@ -1,2 +1,0 @@
-# learobot
-Learning Robot
