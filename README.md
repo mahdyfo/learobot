@@ -19,9 +19,9 @@ Finds the words of a sentence from words table. Then get the most relevant reply
 repeat of a reply to a word = a
 count of words of the sentence, that reply refers to them = b
 
-a is much more important than b. Because two persons replied the same to a sentence. so it has about 70% importance.
-sum of b has 30% importance.
+a is much more important than b. Because two persons replied the same to a sentence. so it has about 60% importance.
+b has 40% importance.
 
-(70% * a) + (30% * b) = score
+(60% * SUM(a)) + (40% * b) = score
 
 If score is more than a certain value, it should send the reply to user.

@@ -31,15 +31,20 @@ class Predict
         $result = DB::table('reply_word')
             ->select(
                 'replies.reply',
-                DB::raw('( ( AVG(reply_word.repeat) * 0.3 ) + ( COUNT(*) * 0.7 ) ) as score')
+                DB::raw('MAX(replies.created_at) as created'),
+                DB::raw('SUM(reply_word.repeat) as repeat_sum'),
+                DB::raw('( ( SUM(reply_word.repeat) * 0.6 ) + ( COUNT(*) * 0.4 ) ) as score')
             )
             ->join('replies', 'replies.id', '=', 'reply_word.reply_id')
             ->whereIn('word_id', $ids)
             ->groupBy('replies.reply')
-            ->orderBy('score', 'desc')
-            ->first();
 
-        //if($result) cache(['last_min_score' => $result->score], 5);
+            ->orderBy('score', 'desc')
+            ->orderBy('repeat_sum', 'desc')
+            ->orderBy('created', 'desc')
+            ->orderBy(DB::raw('RAND()'))
+
+            ->first();
 
         if ($result && $result->score >= $min_score) {
             return $result->reply;

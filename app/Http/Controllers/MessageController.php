@@ -30,7 +30,7 @@ class MessageController extends Controller
         //Predict
         $predict = new Predict($message);
         if ($message->is_reply_to_me) {
-            $reply = $predict->getMostRelativeReply(2.5);
+            $reply = $predict->getMostRelativeReply(1.4);
         } else {
             $reply = $predict->getMostRelativeReply(); //default min repeat
         }
