@@ -13,7 +13,10 @@ class Sentence
     public function getWords($text)
     {
         $text = str_replace(['+', '-', '*', '%', '"', ')', '(', '<', '>', '~'], ' ', $text);
+        $text = str_replace('?', '\?', $text);
+        $text = preg_replace('/(\r?\n)/', ' ', $text);
         $text = preg_replace('/\s+/', ' ', $text);
+        //$text = preg_replace('/\n/s', ' ', $text);
         $words = explode(' ', trim($text));
 
         if ($words) {

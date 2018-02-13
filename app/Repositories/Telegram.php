@@ -20,9 +20,10 @@ class Telegram
 
     public function sendMessage($text, $reply = false)
     {
-        $params = ['chat_id' => $this->chat_id, 'text' => $text];
+        $params['chat_id'] = $this->chat_id;
+        $params['text'] = $text;
         if ($reply) {
-            $params['reply_to_message_id'] = $this->update->getMessage()->getMessageId();
+            $params['reply_to_message_id'] = $this->telegram->getWebhookUpdates()->getMessage()->get('message_id');
         }
 
         return $this->telegram->sendMessage($params);

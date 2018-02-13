@@ -23,17 +23,18 @@ class Predict
 
         $sentence = new Sentence;
         $words = $sentence->getWords($this->text);
-        $words = $this->formatBooleanSearch($words);
+        $search_ready_words = $this->formatBooleanSearch($words);
 
         $word_model = new Word;
-        $ids = $word_model->matchWord($words)->get();
+        $ids = $word_model->matchWord($search_ready_words)->get();
 
-        $result = DB::table('reply_word')
+        $results = DB::table('reply_word')
             ->select(
                 'replies.reply',
-                DB::raw('MAX(replies.created_at) as created'),
+                DB::raw('( ( SUM(reply_word.repeat) * 0.7 ) + ( COUNT(*) * 0.3 ) ) as score'),
                 DB::raw('SUM(reply_word.repeat) as repeat_sum'),
-                DB::raw('( ( SUM(reply_word.repeat) * 0.6 ) + ( COUNT(*) * 0.4 ) ) as score')
+                DB::raw('COUNT(*) as countt'),
+                DB::raw('MAX(replies.created_at) as created')
             )
             ->join('replies', 'replies.id', '=', 'reply_word.reply_id')
             ->whereIn('word_id', $ids)
@@ -41,13 +42,20 @@ class Predict
 
             ->orderBy('score', 'desc')
             ->orderBy('repeat_sum', 'desc')
+            ->orderBy('countt', 'desc')
             ->orderBy('created', 'desc')
             ->orderBy(DB::raw('RAND()'))
+            ->limit(10)
+            ->get();
 
-            ->first();
-
-        if ($result && $result->score >= $min_score) {
-            return $result->reply;
+        foreach ($results as $result) {
+            //minimum score
+            if ($result && $result->score >= $min_score) {
+                //has at least x % words of the original replied message or not
+                if (($result->countt / count($words)) >= config('settings.min_similarity')) {
+                    return $result->reply;
+                }
+            }
         }
 
         return null;

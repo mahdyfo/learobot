@@ -12,4 +12,3 @@
 */
 
 Route::post('/webhook', 'MessageController@hook');
-//Route::get('/test', function(){echo cache('last_min_score');});

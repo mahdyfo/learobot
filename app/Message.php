@@ -66,7 +66,7 @@ class Message extends Model
         );
         $this->self_reply = $this->is_reply ? $this->is_reply && ($message->getReplyToMessage()->getFrom()->getUsername() == $message->getFrom()->getUsername()) : false;
         $this->chat_id = $message->getChat()->getId();
-        $this->message_id = $message->getMessageId();
+        $this->message_id = $this->decoded_message->get('message_id');
 
         //Message Text
         if (!empty($message->getText())) {
